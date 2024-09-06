@@ -130,65 +130,75 @@
         <a id="download-link" class="hidden" download="ai-generated-image.png">Download Image</a>
     </div>
     <script>
-        const API_KEY = 'HUGGINGFACE_API_KEY_PLACEHOLDER';
         let currentImageUrl = null;
 
-        async function query(data) {
-            const response = await fetch(
-                "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
-                {
-                    headers: {
-                        Authorization: `Bearer ${API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
-                    method: "POST",
-                    body: JSON.stringify(data),
-                }
-            );
-            const result = await response.blob();
-            return result;
+async function query(data) {
+    try {
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-dev",
+            {
+                headers: {
+                    Authorization: "Bearer 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",
+                    "Content-Type": "application/json",
+                },
+                method: "POST",
+                body: JSON.stringify(data),
+            }
+        );
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const result = await response.blob();
+        return result;
+    } catch (error) {
+        console.error("Error:", error);
+        throw error;
+    }
+}
 
-        document.getElementById('generate-btn').addEventListener('click', async () => {
-            const prompt = document.getElementById('prompt').value;
-            const loadingBar = document.getElementById('loading-bar');
-            const imageContainer = document.getElementById('image-container');
-            const downloadLink = document.getElementById('download-link');
+document.getElementById('generate-btn').addEventListener('click', async () => {
+    const prompt = document.getElementById('prompt').value;
+    const uniqueId = new Date().getTime();
+    const loadingBar = document.getElementById('loading-bar');
+    const imageContainer = document.getElementById('image-container');
+    const downloadLink = document.getElementById('download-link');
 
-            loadingBar.classList.remove('hidden');
-            loadingBar.textContent = 'Creating your masterpiece...';
-            imageContainer.innerHTML = '<img src="placeholder.png" alt="Loading..." style="opacity: 0.5;">';
-            downloadLink.classList.add('hidden');
+    loadingBar.classList.remove('hidden');
+    loadingBar.textContent = 'Creating your masterpiece...';
+    imageContainer.innerHTML = '<img src="placeholder.png" alt="Loading..." style="opacity: 0.5;">';
+    downloadLink.classList.add('hidden');
 
-            try {
-                const response = await query({"inputs": prompt});
-                
-                if (currentImageUrl) {
-                    URL.revokeObjectURL(currentImageUrl);
-                }
-                currentImageUrl = URL.createObjectURL(response);
-                const img = document.createElement('img');
-                img.src = currentImageUrl;
-                img.alt = "Generated Image";
-                imageContainer.innerHTML = '';
-                imageContainer.appendChild(img);
+    try {
+        const response = await query({"inputs": prompt, "uniqueId": uniqueId});
+        
+        if (currentImageUrl) {
+            URL.revokeObjectURL(currentImageUrl);
+        }
+        currentImageUrl = URL.createObjectURL(response);
+        const img = document.createElement('img');
+        img.src = currentImageUrl;
+        img.alt = "Generated Image";
+        imageContainer.innerHTML = '';
+        imageContainer.appendChild(img);
 
-                downloadLink.href = currentImageUrl;
-                downloadLink.classList.remove('hidden');
-            } catch (error) {
-                console.error("Error generating image:", error);
-                imageContainer.innerHTML = `<p style="color: red;">Error generating image: ${error.message}</p>`;
-            } finally {
-                loadingBar.classList.add('hidden');
-            }
-        });
+        downloadLink.href = currentImageUrl;
+        downloadLink.classList.remove('hidden');
+    } catch (error) {
+        console.error("Error generating image:", error);
+        imageContainer.innerHTML = `<p style="color: red;">Error generating image: ${error.message}</p>`;
+    } finally {
+        loadingBar.classList.add('hidden');
+    }
+});
 
-        document.getElementById('download-link').addEventListener('click', (e) => {
-            if (!currentImageUrl) {
-                e.preventDefault();
-                alert('No image has been generated yet.');
-            }
-        });
+document.getElementById('download-link').addEventListener('click', (e) => {
+    if (!currentImageUrl) {
+        e.preventDefault();
+        alert('No image has been generated yet.');
+    }
+});
     </script>
 </body>
 </html>

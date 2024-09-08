@@ -192,6 +192,12 @@
                 console.error("Error in query:", error);
                 throw error;
             }
+
+            const uniqueData = {
+            ...data,
+            timestamp: Date.now(),
+            random: Math.random()
+            };
         }
 
         function updateStatus(message, isError = false) {
@@ -235,12 +241,11 @@
             }, 50); // Adjust this value to make the loading faster or slower
 
             try {
-                const response = await query({"inputs": promptText});
-                
-                // Ensure loading bar reaches 100% before displaying the image
-                while (loadingPercentage < 100) {
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                }
+                const response = await query({
+                    "inputs": promptText,
+                    // Add a seed for randomness
+                    "seed": Math.floor(Math.random() * 1000000)
+                });
 
                 if (currentImageUrl) {
                     URL.revokeObjectURL(currentImageUrl);
